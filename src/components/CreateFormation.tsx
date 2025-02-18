@@ -1,40 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAddFormation } from "../hooks/useFormations";
 import { Formation, NouvelleFormation } from "../types/Formations";
-import { useCentres } from "../hooks/useCentres";
-import { useStatuts } from "../hooks/useStatut";
-import { useTypeOffres } from "../hooks/useTypeOffre";
-import { Centre } from "../types/Centres";
-import {
-  TextField,
-  Select,
-  MenuItem,
-  Button,
-  FormControl,
-  InputLabel,
-  Grid,
-  CircularProgress,
-  Alert,
-  SelectChangeEvent,
-} from "@mui/material";
-
-interface FormData {
-  id?: number;
-  nom: string;
-  centre_id?: number;
-  dateDebut?: string | null;
-  dateFin?: string | null;
-  status_id?: number;
-  type_offre_id?: number;
-}
+import { Button, Grid, Alert, Snackbar } from "@mui/material";
+import { FormationGeneralFields } from "./FormFields/FormationGeneralFields";
+import { FormationDetailsFields } from "./FormFields/FormationDetailsFields";
+import { FormationEffectifsFields } from "./FormFields/FormationEffectifsFields";
+import { useUpdateFormation } from "../hooks/updateFormation";
 
 interface CreateFormationProps {
-  onSubmit: (formation: NouvelleFormation) => Promise<void>;
-  onCancel?: () => void;
-  initialData?: Formation;
-  isEditing?: boolean;
+  onSuccess?: () => void; // ✅ Callback exécuté après une soumission réussie
+  initialData?: Formation; // ✅ Données initiales en mode édition
 }
 
-const defaultFormData: FormData = {
+/**
+ * 📌 Valeurs par défaut du formulaire pour éviter les erreurs d'initialisation.
+ */
+const defaultFormData: NouvelleFormation = {
   nom: "",
   centre_id: undefined,
   dateDebut: null,
@@ -43,46 +24,65 @@ const defaultFormData: FormData = {
   type_offre_id: undefined,
 };
 
-export function CreateFormation({ onSubmit, onCancel, initialData, isEditing = false }: CreateFormationProps) {
-  const [formData, setFormData] = useState<FormData>(
-    initialData
-      ? {
-          ...defaultFormData,
-          ...initialData,
-          dateDebut: initialData.dateDebut ? new Date(initialData.dateDebut).toISOString().split("T")[0] : null,
-          dateFin: initialData.dateFin ? new Date(initialData.dateFin).toISOString().split("T")[0] : null,
-        }
-      : defaultFormData
-  );
-
+/**
+ * 🎓 `CreateFormation`
+ * ---------------------
+ * 📌 Gère l'ajout et la modification d'une formation.
+ * 📌 Utilise des sous-composants (`FormationGeneralFields`, `FormationDetailsFields`, `FormationEffectifsFields`)
+ *    pour séparer les champs et rendre le code plus lisible et modulaire.
+ */
+export function CreateFormation({ onSuccess, initialData }: CreateFormationProps) {
+  // 📝 État local pour stocker les valeurs du formulaire
+  const [formData, setFormData] = useState<NouvelleFormation>(defaultFormData);
   const [error, setError] = useState<string | null>(null);
-  const { data: centres, isLoading: loadingCentres } = useCentres();
-  const { data: statuts, isLoading: loadingStatuts } = useStatuts();
-  const { data: typeOffres, isLoading: loadingTypeOffres } = useTypeOffres();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectChange = (event: SelectChangeEvent<string>) => {
-    const { name, value } = event.target;
-    if (!name) return;
+  // 🔄 Récupération des mutations pour ajouter ou mettre à jour une formation
+  const addFormation = useAddFormation();
+  const updateFormation = useUpdateFormation();
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value ? Number(value) : undefined,
-    }));
-  };
+  /**
+   * 📌 Effet qui initialise les valeurs du formulaire en mode édition.
+   * - Si `initialData` est fournie, on remplit le formulaire avec ces valeurs.
+   * - Conversion des dates `Date` en `null` pour éviter les erreurs.
+   */
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        ...defaultFormData,
+        ...initialData,
+        dateDebut: initialData.dateDebut ? new Date(initialData.dateDebut) : null, // ✅ Convertit `dateDebut` en `Date`
+        dateFin: initialData.dateFin ? new Date(initialData.dateFin) : null, // ✅ Convertit `dateFin` en `Date`
+      });
+    }
+  }, [initialData]);
 
+  /**
+   * 📌 Gestion des changements dans les champs du formulaire.
+   * - Met à jour `formData` à chaque modification de champ.
+   * - Convertit les champs `date` en `string` pour éviter les erreurs.
+   */
   const handleInputChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
     const { name, value } = e.target;
     if (!name) return;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: name.includes("date") && value ? (value as string) : value,
+      [name]: name.includes("date") && value ? (value as string) : value, // ✅ Convertit les dates en string
     }));
   };
 
+  /**
+   * 📌 Gestion de la soumission du formulaire.
+   * - Vérifie que les champs obligatoires sont remplis.
+   * - Exécute `useAddFormation` ou `useUpdateFormation` selon le mode (ajout/modification).
+   * - Déclenche `onSuccess()` si tout se passe bien.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 🚨 Vérification des champs obligatoires
     if (!formData.centre_id) {
       setError("Le centre de formation est obligatoire.");
       return;
@@ -92,95 +92,55 @@ export function CreateFormation({ onSubmit, onCancel, initialData, isEditing = f
       return;
     }
 
-    const formationData: NouvelleFormation = {
-      ...formData,
-      dateDebut: formData.dateDebut ? new Date(formData.dateDebut) : null,
-      dateFin: formData.dateFin ? new Date(formData.dateFin) : null,
-    };
+    try {
+      setIsLoading(true);
+      if (initialData) {
+        // ✏️ Mode édition : Mise à jour de la formation existante
+        await updateFormation.mutateAsync({ id: initialData.id, ...formData });
+        setSuccessMessage("✅ Formation mise à jour avec succès !");
+      } else {
+        // 🆕 Mode création : Ajout d'une nouvelle formation
+        await addFormation.mutateAsync(formData);
+        setSuccessMessage("✅ Formation ajoutée avec succès !");
+      }
 
-    console.log("🚀 Données finales envoyées :", formationData);
-    await onSubmit(formationData);
+      onSuccess?.(); // ✅ Exécute le callback après soumission réussie
+    } catch (error) {
+      console.error("❌ Erreur lors de la soumission de la formation :", error);
+      setError("Une erreur est survenue.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {/* 🚨 Affichage des erreurs */}
       {error && <Alert severity="error">{error}</Alert>}
 
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Nom de la formation"
-            name="nom"
-            value={formData.nom}
-            onChange={handleInputChange}
-            required
-          />
-        </Grid>
+      {/* ✅ Affichage du message de succès */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={4000}
+        onClose={() => setSuccessMessage(null)}
+        message={successMessage}
+      />
 
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Centre de formation</InputLabel>
-            <Select name="centre_id" value={formData.centre_id?.toString() || ""} onChange={handleSelectChange}>
-              {loadingCentres ? (
-                <MenuItem disabled>
-                  <CircularProgress size={24} /> Chargement...
-                </MenuItem>
-              ) : (
-                centres?.map((centre: Centre) => (
-                  <MenuItem key={centre.id} value={centre.id.toString()}>
-                    {centre.nom}
-                  </MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
-        </Grid>
+      {/* 📌 Champs du formulaire divisés en plusieurs sections */}
+      <FormationGeneralFields formData={formData} onChange={handleInputChange} setFormData={setFormData} />
+      <FormationDetailsFields formData={formData} onChange={handleInputChange} />
+      <FormationEffectifsFields formData={formData} onChange={handleInputChange} />
 
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Statut</InputLabel>
-            <Select name="status_id" value={formData.status_id?.toString() || ""} onChange={handleSelectChange}>
-              {loadingStatuts ? (
-                <MenuItem disabled>
-                  <CircularProgress size={24} /> Chargement...
-                </MenuItem>
-              ) : (
-                statuts?.map((statut) => (
-                  <MenuItem key={statut.id} value={statut.id.toString()}>{statut.nom}</MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Type d'offre</InputLabel>
-            <Select name="type_offre_id" value={formData.type_offre_id?.toString() || ""} onChange={handleSelectChange}>
-              {loadingTypeOffres ? (
-                <MenuItem disabled>
-                  <CircularProgress size={24} /> Chargement...
-                </MenuItem>
-              ) : (
-                typeOffres?.map((type) => (
-                  <MenuItem key={type.id} value={type.id.toString()}>{type.nom}</MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
-
+      {/* 🎯 Boutons d'action */}
       <Grid container spacing={2} mt={2}>
         <Grid item xs={6}>
-          <Button fullWidth variant="contained" color="primary" type="submit">
-            {isEditing ? "Modifier" : "Ajouter"}
+          <Button fullWidth variant="contained" color="primary" type="submit" disabled={isLoading}>
+            {isLoading ? "En cours..." : initialData ? "Modifier" : "Ajouter"}
           </Button>
         </Grid>
-        {isEditing && (
+        {initialData && (
           <Grid item xs={6}>
-            <Button fullWidth variant="outlined" color="secondary" onClick={onCancel}>
+            <Button fullWidth variant="outlined" color="secondary" onClick={onSuccess}>
               Annuler
             </Button>
           </Grid>

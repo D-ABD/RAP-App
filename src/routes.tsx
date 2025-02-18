@@ -7,6 +7,8 @@ import Centres from "./components/Centres";
 import FormationDetails from "./pages/FormationDetails"; // 📌 Ajout de la nouvelle page
 import Formations from "./pages/Formations";
 import Mgo from "./pages/Mgo";
+import Parametres from "./pages/Parametres";
+import FormationDetailsEditable from "./pages/FormationDetailsEditable";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -17,8 +19,12 @@ const AppRoutes: React.FC = () => {
       <Route path="/formations" element={<Formations />} />
       <Route path="/Mgo" element={<Mgo />} />
       <Route path="/formation/:id" element={<FormationDetails />} /> {/* 📌 Route dynamique */}
+      <Route path="/formations/:id/edit" element={<FormationDetailsEditable />} /> {/* ✅ Nouvelle route */}
 
-      <Route path="/test-supabase" element={<TestSupabase />} />
+      <Route path="/parametres" element={<Parametres />} /> {/* ✅ Nouvelle route */}
+
+
+      <Route path="/Parametres" element={<TestSupabase />} />
       
       {/* Redirection si la route n'existe pas */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,18 +1,16 @@
 import { Centre } from "./Centres";
 
-// 📌 Correspondance BDD : Table "formations"
-
-// 🏗 Interface pour une formation complète
 export interface Formation {
-  readonly id: number;  // Non nullable
-  nom: string;  // Non nullable
+  readonly id: number;
+  nom: string;
   centre_id?: number;
-  centre?: Centre;
-  status_id?: number; // 🔄 Remplacement de status par status_id
+  centre_nom?: string;
+  centre?: Centre | null;
+  status_id?: number;
+  type_offre_id?: number;
   produit?: string;
   numProduit?: string;
   numOffre?: string;
-  type_offre_id?: number; // ✅ Correction : Stocker l'ID du type d'offre
   dateDebut?: Date | null;
   dateFin?: Date | null;
   totalPlaces?: number;
@@ -27,25 +25,11 @@ export interface Formation {
   convocation_envoie?: boolean;
   assistante?: string;
   last_updated?: Date | null;
+  // Nouveaux champs pour les labels
+  statusLabel?: string;
+  typeOffreLabel?: string;
 }
 
-// 🔹 Types pour CRUD Formation
 export type NouvelleFormation = Omit<Formation, "id">;
-export type ModifierFormation = Partial<Omit<Formation, "id">> & { id: number };  // Mise à jour partielle d'une formation existante
-export type SupprimerFormation = Pick<Formation, "id">;  // Suppression d'une formation (requiert uniquement l'ID)
-
-// 📌 Correspondance BDD : Pagination sur les formations
-
-// 🎯 Interface pour gérer la pagination des résultats de formations
-export interface Pagination {
-  page: number;  // Numéro de la page actuelle
-  pageSize: number;  // Nombre d'éléments affichés par page
-  totalItems: number;  // Nombre total d'éléments dans la recherche
-  totalPages: number;  // Nombre total de pages disponibles
-}
-
-// 🔹 Interface combinée : Formations paginées
-export interface FormationsAvecPagination {
-  formations: Formation[];  // Liste des formations récupérées
-  pagination: Pagination;  // Données de pagination
-}
+export type ModifierFormation = Partial<Omit<Formation, "id">> & { id: number };
+export type SupprimerFormation = Pick<Formation, "id">;

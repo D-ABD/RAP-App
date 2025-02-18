@@ -1,31 +1,30 @@
 import { useParams } from "react-router-dom";
-import { useFormationById } from "../hooks/useFormations";
-import CommentairesRevue from "../components/CommentairesRevue";
+import { useFormations } from "../hooks/useFormations";
+import { Container, Typography, Paper, CircularProgress } from "@mui/material";
+import { FormationGeneralInfo } from "../components/FormationDétails/FormationGeneralInfo";
+import { FormationEffectifsInfo } from "../components/FormationDétails/FormationEffectifsInfo";
+import { FormationDetailsInfo } from "../components/FormationDétails/FormationDetailsInfo";
 
 export default function FormationDetails() {
-  const { id } = useParams(); // 📌 Récupérer l'ID depuis l'URL
-  const formationId = id ? parseInt(id, 10) : 0; // ✅ Utiliser 0 comme valeur par défaut
+  const { id } = useParams<{ id: string }>(); // 🔍 Récupère l'ID de l'URL
+  const { data: formations, isLoading, error } = useFormations();
 
-  const { data: formation, isLoading, error } = useFormationById(formationId);
+  if (isLoading) return <CircularProgress />;
+  if (error) return <Typography color="error">❌ Erreur : {error.message}</Typography>;
 
-  if (isLoading) return <p className="text-center">Chargement...</p>;
-  if (error || !formation) return <p className="text-center text-red-500">Formation introuvable.</p>;
+  // 🔎 Recherche de la formation par ID
+  const formation = formations?.find((f) => f.id === Number(id));
+
+  if (!formation) return <Typography>❌ Formation non trouvée.</Typography>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">📚 {formation.nom}</h2>
-      <p className="text-gray-700">📍 Centre : <strong>{formation.centre?.nom || "Non spécifié"}</strong></p>
-      <p className="text-gray-500">📅 Du {new Date(formation.dateDebut).toLocaleDateString()} au {new Date(formation.dateFin).toLocaleDateString()}</p>
-      <p className="text-blue-500 font-semibold mt-2">📌 Statut : {formation.status}</p>
-
-      {/* Intégration des commentaires */}
-      <div className="mt-6">
-        {formationId > 0 ? (
-          <CommentairesRevue formationId={formationId} />
-        ) : (
-          <p className="text-center text-gray-500">Impossible de charger les commentaires.</p>
-        )}
-      </div>
-    </div>
+    <Container maxWidth="md">
+      <Typography variant="h4" gutterBottom>📋 Détails de la formation</Typography>
+      <Paper elevation={3} sx={{ padding: 4 }}>
+        <FormationGeneralInfo formation={formation} />
+        <FormationDetailsInfo formation={formation} />
+        <FormationEffectifsInfo formation={formation} />
+      </Paper>
+    </Container>
   );
 }
