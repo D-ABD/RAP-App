@@ -2,6 +2,7 @@ import { useDeleteFormation } from "../hooks/useFormations";
 import { Formation } from "../types/Formations";
 import { FormationEditButton } from "./FormationEditButton";
 import { FormationDeleteButton } from "./FormationDeleteButton";
+import { Typography } from "@mui/material";
 
 interface FormationListProps {
   formations: Formation[]; // 📌 Liste des formations à afficher
@@ -61,6 +62,16 @@ export function FormationList({ formations, isLoading, error, setEditingFormatio
               {formation.dateFin ? new Date(formation.dateFin).toLocaleDateString() : "Non défini"}
             </p>
           </div>
+
+           {/* A recruter */}
+ <Typography variant="h6" fontWeight="bold">
+                  {formation.aRecruter}
+                </Typography>
+
+ {/* Places totales */}
+ <Typography variant="h6" fontWeight="bold">
+                  {formation.totalPlaces}
+                </Typography>
 
           {/* 🛠️ Boutons pour modifier ou supprimer la formation */}
           <div className="flex gap-2">

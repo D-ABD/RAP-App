@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useAddFormation } from "../hooks/useFormations";
 import { Formation, NouvelleFormation } from "../types/Formations";
 import { Button, Grid, Alert, Snackbar } from "@mui/material";
-import { FormationGeneralFields } from "./FormFields/FormationGeneralFields";
-import { FormationDetailsFields } from "./FormFields/FormationDetailsFields";
-import { FormationEffectifsFields } from "./FormFields/FormationEffectifsFields";
 import { useUpdateFormation } from "../hooks/updateFormation";
+import { FormationGeneralFields } from "../components/FormFields/FormationGeneralFields";
+//import { FormationInfoForm } from "../components/FormFields/FormationInfoForm";
 
 interface CreateFormationProps {
   onSuccess?: () => void; // ✅ Callback exécuté après une soumission réussie
@@ -128,8 +127,7 @@ export function CreateFormation({ onSuccess, initialData }: CreateFormationProps
 
       {/* 📌 Champs du formulaire divisés en plusieurs sections */}
       <FormationGeneralFields formData={formData} onChange={handleInputChange} setFormData={setFormData} />
-      <FormationDetailsFields formData={formData} onChange={handleInputChange} />
-      <FormationEffectifsFields formData={formData} onChange={handleInputChange} />
+    {/*     <FormationInfoForm formData={formData} onChange={handleInputChange} /> */}
 
       {/* 🎯 Boutons d'action */}
       <Grid container spacing={2} mt={2}>

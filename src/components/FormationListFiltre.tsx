@@ -1,78 +1,178 @@
-import { useFormations } from "../hooks/useFormations";
-import { useFilterFormations } from "../hooks/useFilterFormations";
-import { Button } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+// Importation des hooks React et personnalisés
+import { useState } from "react"; // Hook pour gérer l'état local
+import { useFormations } from "../hooks/useFormations"; // Hook personnalisé pour récupérer les formations
+import { useFilterFormations } from "../hooks/useFilterFormations"; // Hook personnalisé pour filtrer les formations
+import { useNavigate } from "react-router-dom"; // Hook pour la navigation entre les pages
 
+// Importation des composants Material-UI
+import { 
+  Card,           // Composant pour créer une carte
+  CardContent,    // Contenu de la carte
+  Typography,     // Composant pour le texte
+  Box,           // Conteneur flexible
+  Button,        // Bouton
+  Grid,          // Système de grille
+  Chip,          // Étiquette
+  CircularProgress, // Indicateur de chargement
+  Pagination     // Pagination
+} from "@mui/material";
+
+// Interface TypeScript définissant la structure des props du composant
 interface FormationListFiltreProps {
-  filters: { search: string; status_id: number | ""; type_offre_id: number | ""; centre_id: number | "" };
+  filters: {
+    search: string;               // Texte de recherche
+    status_id: number | "";       // ID du statut (peut être un nombre ou une chaîne vide)
+    type_offre_id: number | "";   // ID du type d'offre
+    centre_id: number | "";       // ID du centre
+  };
 }
 
-/**
- * 📌 `FormationListFiltre`
- * --------------------------
- * 🔄 Récupère les formations depuis Supabase via `useFormations()`,
- * puis applique les filtres dynamiquement avec `useFilterFormations()`.
- * ✏️ Ajoute un bouton "Modifier" à côté de chaque formation.
- */
+// Composant principal
 export default function FormationListFiltre({ filters }: FormationListFiltreProps) {
-  const navigate = useNavigate(); // ✅ Hook pour la navigation
+  // Hook de navigation React Router
+  const navigate = useNavigate();
+
+  // Récupération des données avec le hook personnalisé useFormations
+  // data: les formations, isLoading: état de chargement, error: erreurs éventuelles
   const { data: formations = [], isLoading, error } = useFormations();
+
+  // Filtrage des formations selon les critères
   const filteredFormations = useFilterFormations(formations, filters);
 
+  // Configuration de la pagination
+  const [page, setPage] = useState(1); // État local pour la page courante
+  const itemsPerPage = 6; // Nombre d'éléments par page
+  const totalPages = Math.ceil(filteredFormations.length / itemsPerPage); // Calcul du nombre total de pages
+
+  // Sélection des formations à afficher pour la page courante
+  const displayedFormations = filteredFormations.slice(
+    (page - 1) * itemsPerPage, // Index de début
+    page * itemsPerPage        // Index de fin
+  );
+
+  // Affichage pendant le chargement
   if (isLoading) {
-    return <p className="text-gray-500 text-lg text-center py-8">⏳ Chargement des formations...</p>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
+  // Affichage en cas d'erreur
   if (error) {
-    return <p className="text-red-500 text-lg text-center py-8">❌ Erreur : {error.message}</p>;
+    return (
+      <Typography color="error" variant="h6" textAlign="center" mt={4}>
+        ❌ Erreur : {error.message}
+      </Typography>
+    );
   }
 
+  // Affichage si aucune formation n'existe
   if (!formations.length) {
-    return <p className="text-gray-500 text-lg text-center py-8">📭 Aucune formation disponible.</p>;
+    return (
+      <Typography color="textSecondary" variant="h6" textAlign="center" mt={4}>
+        📭 Aucune formation disponible.
+      </Typography>
+    );
   }
 
+  // Affichage si aucune formation ne correspond aux filtres
   if (filteredFormations.length === 0) {
-    return <p className="text-gray-500 text-lg text-center py-8">🔍 Aucune formation ne correspond aux critères de recherche.</p>;
+    return (
+      <Typography color="textSecondary" variant="h6" textAlign="center" mt={4}>
+        🔍 Aucune formation ne correspond aux critères de recherche.
+      </Typography>
+    );
   }
 
+  // Rendu principal du composant
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredFormations.map((formation) => (
-        <div
-          key={formation.id}
-          className="bg-white p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
-        >
-          <div className="flex flex-col space-y-2">
-            <h2 className="text-xl font-semibold text-gray-800">{formation.nom}</h2>
-            <p className="text-gray-600 text-sm">📍 {formation.centre_nom || "Centre non défini"}</p>
+    <Box>
+      {/* Grille de cartes de formations */}
+      <Grid container spacing={3}>
+        {displayedFormations.map((formation) => (
+          // Chaque formation occupe une cellule de la grille
+          <Grid item xs={12} sm={6} md={4} key={formation.id}>
+            {/* Carte Material-UI avec animation au survol */}
+            <Card sx={{ 
+              p: 2, // padding de 2 unités
+              boxShadow: 3, // ombre portée niveau 3
+              transition: "0.3s", // animation de transition
+              "&:hover": { boxShadow: 6 } // ombre plus prononcée au survol
+            }}>
+              <CardContent>
+                {/* Titre de la formation */}
+                <Typography variant="h6" fontWeight="bold">
+                  {formation.nom}
+                </Typography>
 
-            {formation.dateDebut && (
-              <p className="text-gray-500 text-sm">
-                🗓 {new Date(formation.dateDebut).toLocaleDateString("fr-FR")}
-              </p>
-            )}
+                {/* Nom du centre */}
+                <Typography variant="body2" color="textSecondary">
+                  📍 {formation.centre_nom || "Centre non défini"}
+                </Typography>
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                {formation.statusLabel}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                {formation.typeOffreLabel}
-              </span>
-            </div>
+                {/* Date de début (si elle existe) */}
+                {formation.dateDebut && (
+                  <Typography variant="body2" color="textSecondary">
+                    🗓 {new Date(formation.dateDebut).toLocaleDateString("fr-FR")}
+                  </Typography>
+                )}
 
-            {/* ✅ Bouton Modifier */}
-            <Button
-              variant="contained"
-              color="secondary"
-              sx={{ mt: 2 }}
-              onClick={() => navigate(`/formations/${formation.id}/edit`)}
-            >
-              ✏️ Modifier
-            </Button>
-          </div>
-        </div>
-      ))}
-    </div>
+
+
+ {/* A recruter */}
+ <Typography variant="h6" fontWeight="bold">
+                  {formation.aRecruter}
+                </Typography>
+
+ {/* Places totales */}
+ <Typography variant="h6" fontWeight="bold">
+                  {formation.totalPlaces}
+                </Typography>
+
+                {/* Étiquettes de statut et type d'offre */}
+                <Box mt={2} display="flex" gap={1} flexWrap="wrap">
+                  <Chip 
+                    label={formation.statusLabel} 
+                    color="primary" 
+                    variant="outlined" 
+                  />
+                  <Chip 
+                    label={formation.typeOffreLabel} 
+                    color="success" 
+                    variant="outlined" 
+                  />
+                </Box>
+
+                {/* Bouton de modification */}
+                <Box mt={3}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    fullWidth 
+                    onClick={() => navigate(`/formations/${formation.id}/edit`)}
+                  >
+                    ✏️ Modifier
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Composant de pagination (affiché uniquement s'il y a plus d'une page) */}
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <Pagination
+            count={totalPages}        // Nombre total de pages
+            page={page}               // Page courante
+            onChange={(_, value) => setPage(value)} // Fonction de changement de page
+            color="primary"           // Couleur des boutons
+          />
+        </Box>
+      )}
+    </Box>
   );
 }

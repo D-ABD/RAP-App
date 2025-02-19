@@ -1,23 +1,19 @@
 import { useState } from "react";
 import FormationFilters from "../components/FormationFilters";
 import FormationListFiltre from "../components/FormationListFiltre";
+import { Container, Typography, Paper, Box } from "@mui/material";
 
 /**
  * Composant `RevueHebdo`
  * -----------------------
- * 📌 Ce composant est la page principale de la revue hebdomadaire des formations.
- * 🔄 Il gère l'état des filtres et les passe aux composants `FormationFilters` et `FormationListFiltre`.
- * 🎯 Il permet une expérience utilisateur fluide avec une mise à jour dynamique des résultats.
+ * 📌 Page principale de la revue hebdomadaire des formations.
+ * 🔄 Gère l'état des filtres et les passe aux composants `FormationFilters` et `FormationListFiltre`.
+ * 🎯 Permet une expérience utilisateur fluide avec une mise à jour dynamique des résultats.
  */
 export default function RevueHebdo() {
   /**
    * 📝 État local `filters`
    * - Stocke les valeurs des filtres utilisés pour filtrer les formations.
-   * - `search` : Recherche textuelle.
-   * - `status_id` : Filtrage par statut de la formation.
-   * - `type_offre_id` : Filtrage par type d’offre de formation.
-   * - `centre_id` : Filtrage par centre de formation.
-   * ✅ Chaque filtre peut être un `number` (valeur sélectionnée) ou `""` (tous les résultats).
    */
   const [filters, setFilters] = useState<{ 
     search: string; 
@@ -32,15 +28,21 @@ export default function RevueHebdo() {
   });
 
   return (
-    <div className="container mx-auto p-6">
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* 🏷️ Titre de la page */}
-      <h1 className="text-2xl font-bold mb-6">📅 Revue Hebdomadaire des Formations</h1>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        📅 Revue Hebdomadaire des Formations
+      </Typography>
 
-      {/* 🔍 Composant qui gère les filtres et met à jour `filters` automatiquement */}
-      <FormationFilters onFilterChange={setFilters} />
+      {/* 🔍 Zone des filtres */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+        <FormationFilters onFilterChange={setFilters} />
+      </Paper>
 
-      {/* 📋 Composant qui affiche la liste des formations filtrées */}
-      <FormationListFiltre filters={filters} />
-    </div>
+      {/* 📋 Liste des formations filtrées */}
+      <Box>
+        <FormationListFiltre filters={filters} />
+      </Box>
+    </Container>
   );
 }

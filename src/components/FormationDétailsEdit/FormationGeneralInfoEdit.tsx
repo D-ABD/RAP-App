@@ -29,10 +29,9 @@ export function FormationGeneralInfoEdit({ formation, onChange, onSelectChange }
       </Grid>
 
       {/* 🏫 Centre (Non modifiable après création) */}
-      <Typography sx={{ color: "gray", fontStyle: "italic" }}>
-  <strong>Centre :</strong> {formation.centre_nom ?? "Non défini"}
-</Typography>
-
+      <Grid item xs={12} sm={6}>
+        <Typography><strong>Centre :</strong> {formation.centre_nom ?? "Non défini"}</Typography>
+      </Grid>
 
       {/* 🎭 Statut */}
       <Grid item xs={12} sm={6}>

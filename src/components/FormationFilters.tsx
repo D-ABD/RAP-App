@@ -3,7 +3,7 @@ import { StatusSelect } from "../components/StatusSelect";
 import { SearchInput } from "../components/SearchInput";
 import CentreSelect from "../components/CentreSelect";
 import { TypeOffreSelect } from "../components/TypeOffreSelect";
-import { FormControl } from "@mui/material";
+import { FormControl, Paper, Box, Stack, Button, Typography } from "@mui/material";
 
 interface FormationFiltersProps {
   onFilterChange: (filters: { search: string; status_id: number | ""; type_offre_id: number | ""; centre_id: number | "" }) => void;
@@ -25,8 +25,6 @@ export default function FormationFilters({ onFilterChange }: FormationFiltersPro
 
   /**
    * 🔄 Met à jour les filtres et notifie le parent (`RevueHebdo.tsx`)
-   * - Appelé automatiquement à chaque changement de filtre grâce à `useEffect`.
-   * - Convertit les valeurs de `string` à `number | ""` pour éviter les erreurs TypeScript.
    */
   useEffect(() => {
     onFilterChange({
@@ -37,43 +35,65 @@ export default function FormationFilters({ onFilterChange }: FormationFiltersPro
     });
   }, [search, selectedStatus, selectedTypeOffre, selectedCentre, onFilterChange]);
 
+  /**
+   * 🔄 Réinitialise tous les filtres à leur valeur par défaut
+   */
+  const resetFilters = () => {
+    setSearch("");
+    setSelectedStatus("");
+    setSelectedTypeOffre("");
+    setSelectedCentre("");
+  };
+
   return (
-    <div className="space-y-4 mb-8">
-      {/* 🔍 Barre de recherche */}
-      <div className="w-full">
+    <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+      {/* 📌 Titre des filtres */}
+      <Typography variant="h6" fontWeight="bold" mb={2}>
+        🔍 Filtres de recherche
+      </Typography>
+
+      <Stack spacing={2}>
+        {/* 🔍 Barre de recherche */}
         <SearchInput 
           value={search} 
           onChange={setSearch} 
           placeholder="Rechercher une formation..." 
         />
-      </div>
 
-      {/* 📌 Sélecteurs de filtres */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* 🏷️ Sélecteur de statut */}
-        <FormControl fullWidth>
-          <StatusSelect 
-            value={selectedStatus} 
-            onChange={setSelectedStatus} 
-          />
-        </FormControl>
+        {/* 📌 Sélecteurs de filtres */}
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          {/* 🏷️ Sélecteur de statut */}
+          <FormControl fullWidth>
+            <StatusSelect 
+              value={selectedStatus} 
+              onChange={setSelectedStatus} 
+            />
+          </FormControl>
 
-        {/* 🎓 Sélecteur de type d'offre */}
-        <FormControl fullWidth>
-          <TypeOffreSelect 
-            value={selectedTypeOffre} 
-            onChange={setSelectedTypeOffre} 
-          />
-        </FormControl>
+          {/* 🎓 Sélecteur de type d'offre */}
+          <FormControl fullWidth>
+            <TypeOffreSelect 
+              value={selectedTypeOffre} 
+              onChange={setSelectedTypeOffre} 
+            />
+          </FormControl>
 
-        {/* 🏫 Sélecteur de centre de formation */}
-        <FormControl fullWidth>
-          <CentreSelect 
-            value={selectedCentre} 
-            onChange={setSelectedCentre} 
-          />
-        </FormControl>
-      </div>
-    </div>
+          {/* 🏫 Sélecteur de centre de formation */}
+          <FormControl fullWidth>
+            <CentreSelect 
+              value={selectedCentre} 
+              onChange={setSelectedCentre} 
+            />
+          </FormControl>
+        </Stack>
+
+        {/* 🎯 Bouton de réinitialisation */}
+        <Box display="flex" justifyContent="flex-end">
+          <Button variant="outlined" color="secondary" onClick={resetFilters}>
+            Réinitialiser les filtres
+          </Button>
+        </Box>
+      </Stack>
+    </Paper>
   );
 }

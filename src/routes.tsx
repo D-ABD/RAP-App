@@ -13,10 +13,23 @@ import FormationDetailsEditable from "./pages/FormationDetailsEditable";
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
+
+
+
+
+
+
+
+
+
+
       <Route path="/" element={<Accueil />} />
       <Route path="/revue-hebdo" element={<RevueHebdo />} />
       <Route path="/centres" element={<Centres />} />
       <Route path="/formations" element={<Formations />} />
+
+
+
       <Route path="/Mgo" element={<Mgo />} />
       <Route path="/formation/:id" element={<FormationDetails />} /> {/* 📌 Route dynamique */}
       <Route path="/formations/:id/edit" element={<FormationDetailsEditable />} /> {/* ✅ Nouvelle route */}
