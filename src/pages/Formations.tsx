@@ -5,18 +5,19 @@ import { Container, Typography, Grid, Card, CardContent, CircularProgress, Box, 
 import FormationFilters from "../components/FormationFilters";
 
 export default function Formations() {
+  // 📌 Récupération des formations depuis le hook personnalisé `useFormations`
   const { data: formations, isLoading, error } = useFormations();
 
   // 📌 États pour la pagination
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 6; // Nombre d'éléments affichés par page
+  const [page, setPage] = useState(1);  // Page actuelle de la pagination
+  const itemsPerPage = 6;  // Nombre d'éléments par page
 
-  // 📌 États pour les filtres
+  // 📌 États pour les filtres de recherche
   const [filters, setFilters] = useState<{ 
-    search: string; 
-    status_id: number | ""; 
-    type_offre_id: number | ""; 
-    centre_id: number | ""; 
+    search: string;  // Recherche par nom
+    status_id: number | "";  // Filtre par statut
+    type_offre_id: number | "";  // Filtre par type d'offre
+    centre_id: number | "";  // Filtre par centre
   }>({
     search: "",
     status_id: "",
@@ -24,7 +25,7 @@ export default function Formations() {
     centre_id: "",
   });
 
-  // 📌 Filtrage des formations
+  // 📌 Filtrage des formations selon les critères définis dans les filtres
   const filteredFormations = formations?.filter((formation) => {
     return (
       (filters.search === "" || formation.nom.toLowerCase().includes(filters.search.toLowerCase())) &&
@@ -35,24 +36,25 @@ export default function Formations() {
   }) ?? [];
 
   // 📌 Mise à jour de la pagination après filtrage
-  const totalPages = Math.ceil(filteredFormations.length / itemsPerPage);
-  const displayedFormations = filteredFormations.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const totalPages = Math.ceil(filteredFormations.length / itemsPerPage); // Calcul du nombre total de pages
+  const displayedFormations = filteredFormations.slice((page - 1) * itemsPerPage, page * itemsPerPage); // Sélection des formations à afficher sur la page actuelle
 
+  // 📌 Chargement ou erreur
   if (isLoading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-      <CircularProgress />
+      <CircularProgress /> {/* Affichage du spinner de chargement */}
     </Box>
   );
 
   if (error) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-      <Typography color="error" variant="h6">❌ Erreur : {error.message}</Typography>
+      <Typography color="error" variant="h6">❌ Erreur : {error.message}</Typography> {/* Affichage de l'erreur si la récupération des données échoue */}
     </Box>
   );
 
   return (
     <Container maxWidth="lg">
-      {/* En-tête */}
+      {/* En-tête avec titre et bouton de création */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={4} mb={4}>
         <Typography variant="h4" fontWeight="bold">📚 Liste des Formations</Typography>
         <Button 
@@ -61,20 +63,19 @@ export default function Formations() {
           variant="contained" 
           color="secondary"
         >
-          
           ➕ Créer une formation
         </Button>
       </Box>
 
       {/* 🔍 Zone des filtres */}
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <FormationFilters onFilterChange={setFilters} />
+        <FormationFilters onFilterChange={setFilters} /> {/* Composant pour gérer les filtres de recherche */}
       </Paper>
 
       {/* 📋 Liste des formations filtrées */}
       {filteredFormations.length === 0 ? (
         <Box textAlign="center" py={6} bgcolor="white" borderRadius={2} boxShadow={1}>
-          <Typography color="textSecondary">Aucune formation ne correspond aux critères.</Typography>
+          <Typography color="textSecondary">Aucune formation ne correspond aux critères.</Typography> {/* Message d'absence de formations */}
         </Box>
       ) : (
         <>
@@ -91,26 +92,35 @@ export default function Formations() {
                   }}
                 >
                   <CardContent>
-                    {/* Titre et centre */}
+                    {/* Titre et centre de la formation */}
                     <Typography variant="h6" fontWeight="bold">{formation.nom}</Typography>
                     <Typography variant="body2" color="textSecondary">
                       📍 {formation.centre_nom || "Centre non défini"}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      📅 {formation.dateDebut 
-                        ? new Date(formation.dateDebut).toLocaleDateString('fr-FR') 
-                        : "Non défini"} 
-                      {formation.dateFin && ` → ${new Date(formation.dateFin).toLocaleDateString('fr-FR')}`}
-                    </Typography>
 
-                    {/* Labels */}
+                    {/* 📅 Dates de début et de fin */}
+                    <Box mt={2} p={1} sx={{ backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+                      <Stack direction="column">
+                        <Typography variant="body2" fontWeight="bold">
+                          📅 Début : {formation.dateDebut ? new Date(formation.dateDebut).toLocaleDateString('fr-FR') : "Non défini"}
+                        </Typography>
+                        <Typography variant="body2" fontWeight="bold">
+                          ⏳ Fin : {formation.dateFin ? new Date(formation.dateFin).toLocaleDateString('fr-FR') : "Non défini"}
+                        </Typography>
+                        <Typography variant="body2" fontWeight="bold" color="textSecondary">
+                          🕒 Dernière mise à jour : {formation.last_updated ? new Date(formation.last_updated).toLocaleString('fr-FR') : "N/A"}
+                        </Typography>
+                      </Stack>
+                    </Box>
+
+                    {/* 📑 Labels pour le statut et le type de l'offre */}
                     <Box mt={2} display="flex" gap={1} flexWrap="wrap">
                       <Chip label={formation.statusLabel} color="primary" variant="outlined" />
                       <Chip label={formation.typeOffreLabel} color="success" variant="outlined" />
                     </Box>
 
-                    {/* Informations sur les effectifs */}
-                    <Box mt={2} p={1} sx={{ backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+                    {/* 📊 Informations sur les effectifs de la formation */}
+                    <Box mt={2} p={1} sx={{ backgroundColor: "#f0f0f0", borderRadius: 1 }}>
                       <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2" fontWeight="bold">👥 À recruter :</Typography>
                         <Typography variant="body2">{formation.aRecruter ?? "N/A"}</Typography>
@@ -121,7 +131,7 @@ export default function Formations() {
                       </Stack>
                     </Box>
 
-                    {/* Bouton Voir Détails */}
+                    {/* 📝 Bouton pour voir les détails de la formation */}
                     <Box mt={3}>
                       <Button 
                         component={Link} 
@@ -139,13 +149,13 @@ export default function Formations() {
             ))}
           </Grid>
 
-          {/* Pagination */}
+          {/* 📊 Pagination */}
           {totalPages > 1 && (
             <Box display="flex" justifyContent="center" mt={4}>
               <Pagination
                 count={totalPages}
                 page={page}
-                onChange={(_, value) => setPage(value)}
+                onChange={(_, value) => setPage(value)}  // Mise à jour de la page lors du changement
                 color="primary"
               />
             </Box>

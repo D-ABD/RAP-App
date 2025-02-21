@@ -6,6 +6,8 @@ interface FilterOptions {
   status_id?: number | "";
   type_offre_id?: number | "";
   centre_id?: number | "";
+  dateDebut?: string | "";  // Filtre par date de début
+  dateFin?: string | "";    // Filtre par date de fin
 }
 
 export const useFilterFormations = (
@@ -36,7 +38,17 @@ export const useFilterFormations = (
         ? true
         : formation.centre_id === filters.centre_id;
 
-      return searchMatch && statusMatch && typeOffreMatch && centreMatch;
+      // Filtre par date de début (vérification que la date existe et est valide)
+      const dateDebutMatch = !filters.dateDebut
+        ? true
+        : new Date(formation.dateDebut || "").getTime() >= new Date(filters.dateDebut).getTime();
+
+      // Filtre par date de fin (vérification que la date existe et est valide)
+      const dateFinMatch = !filters.dateFin
+        ? true
+        : new Date(formation.dateFin || "").getTime() <= new Date(filters.dateFin).getTime();
+
+      return searchMatch && statusMatch && typeOffreMatch && centreMatch && dateDebutMatch && dateFinMatch;
     });
   }, [formations, filters]);
 };

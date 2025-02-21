@@ -3,8 +3,8 @@ import { useAddFormation } from "../hooks/useFormations";
 import { Formation, NouvelleFormation } from "../types/Formations";
 import { Button, Grid, Alert, Snackbar } from "@mui/material";
 import { useUpdateFormation } from "../hooks/updateFormation";
-import { FormationGeneralFields } from "../components/FormFields/FormationGeneralFields";
-//import { FormationInfoForm } from "../components/FormFields/FormationInfoForm";
+import { FormationInfoForm } from "../components/FormFields/FormationInfoForm";
+import { FormationGeneralFields } from "./FormFields/FormationGeneralFields";
 
 interface CreateFormationProps {
   onSuccess?: () => void; // ✅ Callback exécuté après une soumission réussie
@@ -127,7 +127,15 @@ export function CreateFormation({ onSuccess, initialData }: CreateFormationProps
 
       {/* 📌 Champs du formulaire divisés en plusieurs sections */}
       <FormationGeneralFields formData={formData} onChange={handleInputChange} setFormData={setFormData} />
-    {/*     <FormationInfoForm formData={formData} onChange={handleInputChange} /> */}
+     <FormationInfoForm formData={formData} onChange={handleInputChange} /> 
+
+
+
+
+
+
+
+
 
       {/* 🎯 Boutons d'action */}
       <Grid container spacing={2} mt={2}>

@@ -1,5 +1,4 @@
-// Importation des hooks React et personnalisés
-import { useState } from "react"; // Hook pour gérer l'état local
+import { useState, useEffect } from "react"; // Hook pour gérer l'état local
 import { useFormations } from "../hooks/useFormations"; // Hook personnalisé pour récupérer les formations
 import { useFilterFormations } from "../hooks/useFilterFormations"; // Hook personnalisé pour filtrer les formations
 import { useNavigate } from "react-router-dom"; // Hook pour la navigation entre les pages
@@ -14,7 +13,8 @@ import {
   Grid,          // Système de grille
   Chip,          // Étiquette
   CircularProgress, // Indicateur de chargement
-  Pagination     // Pagination
+  Pagination,     // Pagination
+  TextField       // Champ de saisie de texte
 } from "@mui/material";
 
 // Interface TypeScript définissant la structure des props du composant
@@ -24,6 +24,8 @@ interface FormationListFiltreProps {
     status_id: number | "";       // ID du statut (peut être un nombre ou une chaîne vide)
     type_offre_id: number | "";   // ID du type d'offre
     centre_id: number | "";       // ID du centre
+    dateDebut: string | "";  // Ajout des filtres de date
+    dateFin: string | "";    // Ajout des filtres de date
   };
 }
 
@@ -36,8 +38,11 @@ export default function FormationListFiltre({ filters }: FormationListFiltreProp
   // data: les formations, isLoading: état de chargement, error: erreurs éventuelles
   const { data: formations = [], isLoading, error } = useFormations();
 
+  // Gestion des filtres (état local)
+  const [localFilters, setLocalFilters] = useState(filters);
+
   // Filtrage des formations selon les critères
-  const filteredFormations = useFilterFormations(formations, filters);
+  const filteredFormations = useFilterFormations(formations, localFilters);
 
   // Configuration de la pagination
   const [page, setPage] = useState(1); // État local pour la page courante
@@ -49,6 +54,11 @@ export default function FormationListFiltre({ filters }: FormationListFiltreProp
     (page - 1) * itemsPerPage, // Index de début
     page * itemsPerPage        // Index de fin
   );
+
+  // Effet pour réinitialiser la page à 1 lorsque les filtres changent
+  useEffect(() => {
+    setPage(1); // Reset de la page
+  }, [localFilters]);
 
   // Affichage pendant le chargement
   if (isLoading) {
@@ -86,6 +96,20 @@ export default function FormationListFiltre({ filters }: FormationListFiltreProp
     );
   }
 
+  // Gestion des filtres de dates
+  const handleDateChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, 
+    filterName: "dateDebut" | "dateFin"
+  ) => {
+    if (e.target instanceof HTMLInputElement) {
+      setLocalFilters(prevFilters => ({
+        ...prevFilters,
+        [filterName]: e.target.value // Mise à jour dynamique du filtre de date
+      }));
+    }
+  };
+  
+
   // Rendu principal du composant
   return (
     <Box>
@@ -107,6 +131,30 @@ export default function FormationListFiltre({ filters }: FormationListFiltreProp
                   {formation.nom}
                 </Typography>
 
+                {/* Filtre par dates */}
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Date de début"
+                      type="date"
+                      value={localFilters.dateDebut}
+                      onChange={(e) => handleDateChange(e, "dateDebut")}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Date de fin"
+                      type="date"
+                      value={localFilters.dateFin}
+                      onChange={(e) => handleDateChange(e, "dateFin")}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                </Grid>
+
                 {/* Nom du centre */}
                 <Typography variant="body2" color="textSecondary">
                   📍 {formation.centre_nom || "Centre non défini"}
@@ -119,15 +167,13 @@ export default function FormationListFiltre({ filters }: FormationListFiltreProp
                   </Typography>
                 )}
 
-
-
- {/* A recruter */}
- <Typography variant="h6" fontWeight="bold">
+                {/* A recruter */}
+                <Typography variant="h6" fontWeight="bold">
                   {formation.aRecruter}
                 </Typography>
 
- {/* Places totales */}
- <Typography variant="h6" fontWeight="bold">
+                {/* Places totales */}
+                <Typography variant="h6" fontWeight="bold">
                   {formation.totalPlaces}
                 </Typography>
 

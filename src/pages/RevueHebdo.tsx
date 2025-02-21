@@ -1,25 +1,22 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useFormations } from "../hooks/useFormations";
+import { Container, Typography, Grid, Card, CardContent, CircularProgress, Box, Button, Chip, Stack, Pagination, Paper } from "@mui/material";
 import FormationFilters from "../components/FormationFilters";
-import FormationListFiltre from "../components/FormationListFiltre";
-import { Container, Typography, Paper, Box } from "@mui/material";
 
-/**
- * Composant `RevueHebdo`
- * -----------------------
- * 📌 Page principale de la revue hebdomadaire des formations.
- * 🔄 Gère l'état des filtres et les passe aux composants `FormationFilters` et `FormationListFiltre`.
- * 🎯 Permet une expérience utilisateur fluide avec une mise à jour dynamique des résultats.
- */
 export default function RevueHebdo() {
-  /**
-   * 📝 État local `filters`
-   * - Stocke les valeurs des filtres utilisés pour filtrer les formations.
-   */
-  const [filters, setFilters] = useState<{ 
-    search: string; 
-    status_id: number | ""; 
-    type_offre_id: number | ""; 
-    centre_id: number | ""; 
+  const { data: formations, isLoading, error } = useFormations();
+
+  // 📌 États pour la pagination
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // 📌 États pour les filtres
+  const [filters, setFilters] = useState<{
+    search: string;
+    status_id: number | "";
+    type_offre_id: number | "";
+    centre_id: number | "";
   }>({
     search: "",
     status_id: "",
@@ -27,12 +24,46 @@ export default function RevueHebdo() {
     centre_id: "",
   });
 
+  // 📌 Filtrage des formations
+  const filteredFormations = formations?.filter((formation) => {
+    return (
+      (filters.search === "" || formation.nom.toLowerCase().includes(filters.search.toLowerCase())) &&
+      (filters.status_id === "" || formation.status_id === filters.status_id) &&
+      (filters.type_offre_id === "" || formation.type_offre_id === filters.type_offre_id) &&
+      (filters.centre_id === "" || formation.centre_id === filters.centre_id)
+    );
+  }) ?? [];
+
+  // 📌 Mise à jour de la pagination après filtrage
+  const totalPages = Math.ceil(filteredFormations.length / itemsPerPage);
+  const displayedFormations = filteredFormations.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  if (isLoading) return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+      <CircularProgress />
+    </Box>
+  );
+
+  if (error) return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+      <Typography color="error" variant="h6">❌ Erreur : {error.message}</Typography>
+    </Box>
+  );
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      {/* 🏷️ Titre de la page */}
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        📅 Revue Hebdomadaire des Formations
-      </Typography>
+    <Container maxWidth="lg">
+      {/* En-tête */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mt={4} mb={4}>
+        <Typography variant="h4" fontWeight="bold">📚 Liste des Formations</Typography>
+        <Button 
+          component={Link} 
+          to="/Mgo/" 
+          variant="contained" 
+          color="secondary"
+        >
+          ➕ Créer une formation
+        </Button>
+      </Box>
 
       {/* 🔍 Zone des filtres */}
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
@@ -40,9 +71,95 @@ export default function RevueHebdo() {
       </Paper>
 
       {/* 📋 Liste des formations filtrées */}
-      <Box>
-        <FormationListFiltre filters={filters} />
-      </Box>
+      {filteredFormations.length === 0 ? (
+        <Box textAlign="center" py={6} bgcolor="white" borderRadius={2} boxShadow={1}>
+          <Typography color="textSecondary">Aucune formation ne correspond aux critères.</Typography>
+        </Box>
+      ) : (
+        <>
+          <Grid container spacing={3}>
+            {displayedFormations.map((formation) => (
+              <Grid item xs={12} sm={6} md={4} key={formation.id}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    boxShadow: 3, 
+                    transition: "0.3s", 
+                    "&:hover": { boxShadow: 6 },
+                    background: "linear-gradient(to bottom, #f9f9f9, #ffffff)" 
+                  }}
+                >
+                  <CardContent>
+                    {/* Titre et centre */}
+                    <Typography variant="h6" fontWeight="bold">{formation.nom}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      📍 {formation.centre_nom || "Centre non défini"}
+                    </Typography>
+
+                    {/* 📅 Dates */}
+                    <Box mt={2} p={1} sx={{ backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+                      <Stack direction="column">
+                        <Typography variant="body2" fontWeight="bold">
+                          📅 Début : {formation.dateDebut ? new Date(formation.dateDebut).toLocaleDateString('fr-FR') : "Non défini"}
+                        </Typography>
+                        <Typography variant="body2" fontWeight="bold">
+                          ⏳ Fin : {formation.dateFin ? new Date(formation.dateFin).toLocaleDateString('fr-FR') : "Non défini"}
+                        </Typography>
+                        <Typography variant="body2" fontWeight="bold" color="textSecondary">
+                          🕒 Dernière mise à jour : {formation.last_updated ? new Date(formation.last_updated).toLocaleString('fr-FR') : "N/A"}
+                        </Typography>
+                      </Stack>
+                    </Box>
+
+                    {/* Labels */}
+                    <Box mt={2} display="flex" gap={1} flexWrap="wrap">
+                      <Chip label={formation.statusLabel} color="primary" variant="outlined" />
+                      <Chip label={formation.typeOffreLabel} color="success" variant="outlined" />
+                    </Box>
+
+                    {/* Informations sur les effectifs */}
+                    <Box mt={2} p={1} sx={{ backgroundColor: "#f0f0f0", borderRadius: 1 }}>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2" fontWeight="bold">👥 À recruter :</Typography>
+                        <Typography variant="body2">{formation.aRecruter ?? "N/A"}</Typography>
+                      </Stack>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2" fontWeight="bold">📊 Places totales :</Typography>
+                        <Typography variant="body2">{formation.totalPlaces ?? "N/A"}</Typography>
+                      </Stack>
+                    </Box>
+
+                    {/* Bouton Modifier */}
+                    <Box mt={3}>
+                      <Button 
+                        component={Link} 
+                        to={`/formation/modifier/${formation.id}`} 
+                        variant="contained" 
+                        color="primary" 
+                        fullWidth
+                      >
+                        Modifier →
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                color="primary"
+              />
+            </Box>
+          )}
+        </>
+      )}
     </Container>
   );
 }
