@@ -1,13 +1,19 @@
+// src -> hooks -> useCentres.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../supabaseClient";
 import { Centre } from "../types/Centres";
 
 // ✅ Fonction de log en mode dev (Accepte plusieurs arguments)
+const isDevelopment = typeof import.meta !== "undefined" 
+  ? import.meta.env.MODE === "development" 
+  : process.env.NODE_ENV === "development";
+
 const logDebug = <T>(message: string, ...data: T[]) => {
-  if (import.meta.env.MODE === "development") {
+  if (isDevelopment) {
     console.log(message, ...data);
   }
 };
+
 
 // 🔍 Récupérer tous les centres
 export const useCentres = () => {

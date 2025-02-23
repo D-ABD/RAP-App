@@ -1,3 +1,4 @@
+// src -> types -> Centres.ts
 // 📌 Correspondance BDD : Table "centres"
 
 // 🏗 Interface pour un centre de formation
