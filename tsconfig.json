@@ -1,21 +1,23 @@
 {
   "compilerOptions": {
     "types": ["vite/client", "vitest"],
-   "target": "ESNext",                          // Spécifie la version ECMAScript cible
+   "target": "ES2022",                          // Spécifie la version ECMAScript cible
     "useDefineForClassFields": true,             // Active les champs de classe définis
     "lib": ["DOM", "DOM.Iterable", "ESNext"],    // Bibliothèques à inclure dans la compilation
     "allowJs": false,                            // Permet l'inclusion de fichiers JavaScript
     "skipLibCheck": true,                        // Ignore les vérifications de type pour les fichiers de définition de bibliothèque
-    "esModuleInterop": false,                    // Active l'interopérabilité des modules ES
+    "esModuleInterop": true,                    // Active l'interopérabilité des modules ES
     "allowSyntheticDefaultImports": true,        // Permet les imports par défaut des modules sans export par défaut
     "strict": true,                              // Active toutes les vérifications strictes de TypeScript
     "forceConsistentCasingInFileNames": true,    // Force la cohérence de la casse dans les noms de fichiers
     "module": "ESNext",                          // Spécifie le système de module à utiliser
-    "moduleResolution": "Node",                  // Résolution des modules compatible Node.js
+    "moduleResolution": "bundler",                  // Résolution des modules compatible Node.js
     "resolveJsonModule": true,                   // Permet l'importation de modules JSON
     "isolatedModules": true,                     // Active le mode de compilation isolé pour chaque fichier
     "noEmit": true,                              // Désactive la génération de fichiers de sortie
-    "jsx": "react-jsx"                           // Active la transformation JSX avec l'option react-jsx
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    // Active la transformation JSX avec l'option react-jsx
   },
   "include": ["src"]                             // Inclut tous les fichiers du répertoire src
 }
